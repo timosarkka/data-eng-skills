@@ -1,0 +1,39 @@
+# Data files
+*.csv
+*.json
+*.parquet
+*.avro
+*.orc
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Python-specific
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# Configuration files with sensitive information
+config.ini
+secrets.yaml
+
+# Large files or directories
+data/raw
+
+# OS-specific files
+.DS_Store
+Thumbs.db
