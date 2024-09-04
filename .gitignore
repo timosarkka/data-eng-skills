@@ -28,6 +28,7 @@ env/
 .idea/
 
 # Configuration files with sensitive information
+config/
 config.ini
 secrets.yaml
 
