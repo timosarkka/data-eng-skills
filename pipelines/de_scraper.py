@@ -1,12 +1,23 @@
 # Import needed libraries
 import requests
-import bs4
-from bs4 import BeautifulSoup
 import pandas as pd
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from time import sleep
 
-# Define headers, URL and parameters for the desired info to be scraped
-headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"}
+# Set up Chrome options to mimic browser behavior
+options = webdriver.ChromeOptions()
+options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36')
+
+# Initialize a Chrome webdriver with the specified options
+driver = webdriver.Chrome(options=options)
+
+# Define the URL to scrape and open URL in Chrome WebDriver instance
 url = "https://indeed.com/jobs?q=\"Data Engineer\"&l=\"United States\"&start=1"
-r=requests.get(url, headers=headers)
-r.status_code
-soup = BeautifulSoup(r.text, "html.parser") 
+driver.get(url)
+
+# Add sleep for 5s to allow the page to load
+sleep(5)
+
+# Get the page source and parse it with BeautifulSoup
+soup = BeautifulSoup(driver.page_source, "html.parser") 
