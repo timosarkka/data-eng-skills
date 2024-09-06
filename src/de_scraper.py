@@ -1,3 +1,7 @@
+# This script is used to scrape job listings from indeed.com for the role of a Data Engineer based in the United States
+# Job title, company name, location, salary, job type and the full job description are extracted
+# This raw data will then be further transformed in de_processor.py
+
 '''
 Setting up libraries and Chrome driver options
 '''
@@ -28,7 +32,10 @@ Functionality to get the job listings data
 '''
 
 # Function to extract the wanted job listing data and write it to a pandas dataframe
-def get_job_data(job_listing, driver, url):
+def get_job_data(job_listing, url):
+
+    # Initialize driver again to establish a new fresh connection for each run
+    driver = webdriver.Chrome(options=options)
 
     # Extract job title
     title = job_listing.find("a").find("span").text.strip()
@@ -133,7 +140,7 @@ def main():
 
     # Loop over the job listings on the main page
     for index, job_listing in enumerate(job_listings):
-        data = get_job_data(job_listing, driver, url)
+        data = get_job_data(job_listing, url)
         job_data_list.append(data)
         print(f"Successfully extracted data for job listing {index + 1}")
         # Add a longer delay every 5 listings
@@ -141,7 +148,7 @@ def main():
             sleep(random.uniform(5, 10))
 
     # Convert list of records into a pandas dataframe
-    df = pd.DataFrame(job_data_list, mode='a', columns=['Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
+    df = pd.DataFrame(job_data_list, columns=['Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
 
     # Export the dataframe to a CSV file
     df.to_csv('data/raw/data_eng_info_raw.csv', sep=';', index=False)
@@ -153,4 +160,3 @@ def main():
 # Execute the main function
 if __name__ == "__main__":
     main()
-    
