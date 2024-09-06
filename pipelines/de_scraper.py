@@ -1,46 +1,39 @@
 '''
-Setting up the scraper, defining URLs, parameters, and assisting dictionaries
+Setting up libraries and Chrome driver options
 '''
 
 # Import needed libraries
 import pandas as pd
+import random
 import re
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from time import sleep
-from tabulate import tabulate
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 # Set up Chrome options to mimic browser behavior
 options = webdriver.ChromeOptions()
-options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36')
+options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36')
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-gpu")
+options.add_argument("--disable-extensions")
+options.add_argument("--headless")
 
-# Initialize a Chrome webdriver with the specified options
-driver = webdriver.Chrome(options=options)
 
-# Define the URL to scrape and open URL in Chrome WebDriver instance
-url = "https://indeed.com/jobs?q=\"Data Engineer\"&l=\"United States\"&start=1"
-driver.get(url)
 
-# Add sleep for 5s to allow the page to load
-sleep(5)
 
-# Get the page source and parse it with BeautifulSoup
-soup = BeautifulSoup(driver.page_source, "html.parser") 
 
 '''
 Functionality to get the job listings data
 '''
 
 # Function to extract the wanted job listing data and write it to a pandas dataframe
-def get_job_data(job_listing):
+def get_job_data(job_listing, driver, url):
+
     # Extract job title
     title = job_listing.find("a").find("span").text.strip()
     
-    # Extract company, location, salary, job type, summary if available, otherwise assign an empty string
+    # Extract company and location
     try:
         company = job_listing.find('span', class_='css-63koeb eu4oa1w0').text.strip()
     except AttributeError:
@@ -54,16 +47,16 @@ def get_job_data(job_listing):
     # Simulate clicking on the job to reveal additional details, like salary, job type, full job description
     job_link = job_listing.find('a')['href']
     job_url = f"https://indeed.com{job_link}"
-    driver.execute_script("window.open('" + job_url + "');")
+    driver.execute_script("window.open('{}')".format(job_url))
     driver.switch_to.window(driver.window_handles[-1])
 
     # Wait for job details to load
-    sleep(3)
+    sleep(random.uniform(1, 3))
 
-    # Get the new page source and parse it
+    # Get the opened job details page source and parse it
     job_details_soup = BeautifulSoup(driver.page_source, "html.parser")
 
-    # Extract salary, job type, full job description
+    # Extract salary, job type, full job description from job details page
     try:
         salary = job_details_soup.find('span', class_="css-19j1a75 eu4oa1w0").text.strip()
     except AttributeError:
@@ -83,25 +76,72 @@ def get_job_data(job_listing):
     except AttributeError:
         full_job_description = None
 
-    # Close the job details page and switch back to the main page
-    driver.close()
-    driver.switch_to.window(driver.window_handles[0])
+    try:
+        # Close the job details page
+        driver.close()
+        
+        # Check if there are any remaining window handles
+        if driver.window_handles:
+            # Switch back to the main page (now the first handle)
+            driver.switch_to.window(driver.window_handles[0])
+        else:
+            # If no handles left, reinitialize the driver and load the main page
+            driver.quit()
+            driver = webdriver.Chrome(options=options)
+            driver.get(url)
+            sleep(5)  # Allow time for the page to load
+    except Exception as e:
+        print(f"Error switching windows: {e}")
+        # Reinitialize the driver and load the main page
+        driver.quit()
+        driver = webdriver.Chrome(options=options)
+        driver.get(url)
+        sleep(5)  # Allow time for the page to load
+
+
+    # Random sleep after each listing
+    sleep(random.uniform(1, 3))
 
     # Return a tuple containing all the extracted information
     return (title, company, location, salary, job_type, full_job_description)
+
+
+
+
 
 '''
 Main program that runs the scraper
 '''
 
 def main():
-    job_listing = soup.find('div', class_='job_seen_beacon')
+    # Initialize a Chrome webdriver with the specified options
+    driver = webdriver.Chrome(options=options)
+
+    # Define the URL to scrape and open URL in Chrome WebDriver instance
+    url = "https://indeed.com/jobs?q=\"Data Engineer\"&l=\"United States\"&start=1"
+    driver.get(url)
+
+    # Add sleep for 5s to allow the page to load
+    sleep(5)
+
+    # Get the main page source and parse it with BeautifulSoup
+    soup = BeautifulSoup(driver.page_source, "html.parser") 
+
+    # Define the soup from the job listings and initialize an empty list to store job data
+    job_listings = soup.find_all('div', class_='job_seen_beacon')
     job_data_list = []
-    data = get_job_data(job_listing)
-    job_data_list.append(data)
+
+    # Loop over the job listings on the main page
+    for index, job_listing in enumerate(job_listings):
+        data = get_job_data(job_listing, driver, url)
+        job_data_list.append(data)
+        print(f"Successfully extracted data for job listing {index + 1}")
+        # Add a longer delay every 5 listings
+        if (index + 1) % 5 == 0:
+            sleep(random.uniform(5, 10))
 
     # Convert list of records into a pandas dataframe
-    df = pd.DataFrame(job_data_list, columns=['Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
+    df = pd.DataFrame(job_data_list, mode='a', columns=['Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
 
     # Export the dataframe to a CSV file
     df.to_csv('data/raw/data_eng_info_raw.csv', sep=';', index=False)
@@ -113,3 +153,4 @@ def main():
 # Execute the main function
 if __name__ == "__main__":
     main()
+    
