@@ -37,7 +37,8 @@ def get_job_data(job_listing, url):
     # Initialize driver again to establish a new fresh connection for each run
     driver = webdriver.Chrome(options=options)
 
-    # Extract job title
+    # Extract job_id and job title
+    job_id = job_listing.find("a")["id"]
     title = job_listing.find("a").find("span").text.strip()
     
     # Extract company and location
@@ -64,6 +65,7 @@ def get_job_data(job_listing, url):
     job_details_soup = BeautifulSoup(driver.page_source, "html.parser")
 
     # Extract salary, job type, full job description from job details page
+
     try:
         salary = job_details_soup.find('span', class_="css-19j1a75 eu4oa1w0").text.strip()
     except AttributeError:
@@ -110,10 +112,7 @@ def get_job_data(job_listing, url):
     sleep(random.uniform(1, 3))
 
     # Return a tuple containing all the extracted information
-    return (title, company, location, salary, job_type, full_job_description)
-
-
-
+    return (job_id, title, company, location, salary, job_type, full_job_description)
 
 
 '''
@@ -125,7 +124,7 @@ def main():
     driver = webdriver.Chrome(options=options)
 
     # Define the URL to scrape and open URL in Chrome WebDriver instance
-    url = "https://indeed.com/jobs?q=\"Data Engineer\"&l=\"United States\"&start=1"
+    url = "https://indeed.com/jobs?q=\"Data Engineer\"&l=\"United States\"&sort=date&start=0"
     driver.get(url)
 
     # Add sleep for 5s to allow the page to load
@@ -148,7 +147,7 @@ def main():
             sleep(random.uniform(5, 10))
 
     # Convert list of records into a pandas dataframe
-    df = pd.DataFrame(job_data_list, columns=['Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
+    df = pd.DataFrame(job_data_list, columns=['Job ID', 'Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
 
     # Export the dataframe to a CSV file
     df.to_csv('data/raw/data_eng_info_raw.csv', sep=';', index=False)
