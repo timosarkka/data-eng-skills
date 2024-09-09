@@ -30,12 +30,14 @@ env/
 # Configuration files with sensitive information
 config/
 config.ini
+config.py
+database.ini
 secrets.yaml
 
 # Large files or directories
+data/
 data/raw
-data/interim
-
+data/processed
 # OS-specific files
 .DS_Store
 Thumbs.db
