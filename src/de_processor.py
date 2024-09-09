@@ -36,16 +36,16 @@ df['Salary'] = df['Salary'].str.replace('From', '')
 df['Salary'] = df['Salary'].str.replace('a year', '').str.strip()
 df['Salary'] = df['Salary'].str.replace('an hour', '').str.strip()
 df[['Salary_Lower', 'Salary_Upper']] = df['Salary'].str.split('-', expand=True)
-df['Salary_Lower'] = df['Salary_Lower'].str.rstrip().str.replace(',', '').fillna(0)
-df['Salary_Upper'] = df['Salary_Upper'].str.rstrip().str.replace(',', '').fillna(0)
+df['Salary_Lower'] = df['Salary_Lower'].str.rstrip().str.replace(',', '')
+df['Salary_Upper'] = df['Salary_Upper'].str.rstrip().str.replace(',', '')
 
 # Cast columns into proper format
 df['Job ID'] = df['Job ID'].astype('str')
 df['Title'] = df['Title'].astype('str')
 df['Company'] = df['Company'].astype('str')
 df['Location'] = df['Location'].astype('str')
-df['Salary_Lower'] = df['Salary_Lower'].astype(int)
-df['Salary_Upper'] = df['Salary_Upper'].astype(int)
+df['Salary_Lower'] = pd.to_numeric(df['Salary_Lower'], errors='coerce')
+df['Salary_Upper'] = pd.to_numeric(df['Salary_Upper'], errors='coerce')
 df['Job Type'] = df['Job Type'].astype('str')
 df['Full Job Description'] = df['Full Job Description'].astype('str')
 
@@ -56,7 +56,7 @@ Transforming the data
 '''
 
 # Calculate the average of lower and upper salary values
-df['Salary_Avg'] = df[['Salary_Upper', 'Salary_Lower']].mean(axis=1)
+df['Salary_Avg'] = df[['Salary_Upper', 'Salary_Lower']].mean(axis=1, skipna=True)
 
 # Map the full job descriptions against the data_engineering_skills dictionary
 # If match is found, add the skill into a temp list which is then written back to a new column "Req_Skills"
