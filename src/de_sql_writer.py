@@ -27,25 +27,43 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS jobs (
 conn.commit()
 
 # Read the CSV-file and insert job data row by row
-with open('data/processed/data_eng_info_processed.csv', 'r') as f:
-    reader = csv.DictReader(f, delimiter=";")
-    for row in reader:
-        # Convert req_skills to a PostgreSQL-compatible array
-        # Convert decimal columns to None if no value is present
-        # Convert job_type to None if value is nan
-        skills_array = '{' + ', '.join(f'"{skill.strip()}"' for skill in eval(row['Req_Skills'])) + '}'
-        salary_lower = None if row['Salary_Lower'] == '' else row['Salary_Lower']
-        salary_avg = None if row['Salary_Avg'] == '' else row['Salary_Avg']
-        salary_upper = None if row['Salary_Upper'] == '' else row['Salary_Upper']
-        job_type = None if row['Job Type'] == 'nan' else row['Job Type']
-        # Insert job
-        cursor.execute("""
-            INSERT INTO jobs (job_id, title, company, location, salary_lower, salary_avg, salary_upper, job_type, req_skill)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (job_id) DO NOTHING
-        """, (row['Job ID'], row['Title'], row['Company'], row['Location'], salary_lower, salary_avg, salary_upper, job_type, skills_array))
+import os
+
+csv_folder = 'data/processed/'
+for filename in os.listdir(csv_folder):
+    if filename.endswith('.csv'):
+        with open(os.path.join(csv_folder, filename), 'r') as f:
+            reader = csv.DictReader(f, delimiter=";")
+            for row in reader:
+                # Convert req_skills to a PostgreSQL-compatible array
+                # Convert decimal columns to None if no value is present
+                # Convert job_type to None if value is nan
+                skills_array = '{' + ', '.join(f'"{skill.strip()}"' for skill in eval(row['Req_Skills'])) + '}'
+                salary_lower = None if row['Salary_Lower'] == '' else row['Salary_Lower']
+                salary_avg = None if row['Salary_Avg'] == '' else row['Salary_Avg']
+                salary_upper = None if row['Salary_Upper'] == '' else row['Salary_Upper']
+                job_type = None if row['Job Type'] == 'nan' else row['Job Type']
+                # Insert job
+                cursor.execute("""
+                    INSERT INTO jobs (job_id, title, company, location, salary_lower, salary_avg, salary_upper, job_type, req_skill)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (job_id) DO NOTHING
+                """, (row['Job ID'], row['Title'], row['Company'], row['Location'], salary_lower, salary_avg, salary_upper, job_type, skills_array))
 
 conn.commit()
 conn.close()
 
 print("Wrote data to SQL table successfully!")
+
+# Clear the CSV folder from processed files
+print("Clearing processed CSV files...")
+for filename in os.listdir(csv_folder):
+    if filename.endswith('.csv'):
+        file_path = os.path.join(csv_folder, filename)
+        try:
+            os.remove(file_path)
+            print(f"Deleted: {filename}")
+        except Exception as e:
+            print(f"Error deleting {filename}: {e}")
+
+print("Processed-folder cleared.")

@@ -84,7 +84,6 @@ data_engineering_skills = {
     'Pulsar': ['Pulsar', 'Apache Pulsar'],
     'Puppet': ['Puppet'],
     'Python': ['Python'],
-    'R': ['R', 'R Programming'],
     'RabbitMQ': ['RabbitMQ'],
     'Redis': ['Redis'],
     'Redshift': ['Redshift', 'AWS Redshift', 'Amazon Redshift'],

@@ -13,6 +13,7 @@ import re
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from time import sleep
+from datetime import datetime
 
 # Set up Chrome options to mimic browser behavior
 options = webdriver.ChromeOptions()
@@ -124,7 +125,7 @@ def main():
     driver = webdriver.Chrome(options=options)
 
     # Define the URL to scrape and open URL in Chrome WebDriver instance
-    url = "https://indeed.com/jobs?q=\"Data Engineer\"&l=\"United States\"&sort=date&start=0"
+    url = "https://indeed.com/jobs?q=\"Data Engineer\"&l=\"United States\"&sort=date&start=70"
     driver.get(url)
 
     # Add sleep for 5s to allow the page to load
@@ -150,7 +151,9 @@ def main():
     df = pd.DataFrame(job_data_list, columns=['Job ID', 'Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
 
     # Export the dataframe to a CSV file
-    df.to_csv('data/raw/data_eng_info_raw.csv', sep=';', index=False)
+    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f'data/raw/data_eng_info_raw_{current_time}.csv'
+    df.to_csv(filename, sep=';', index=False)
     print("Raw data saved to CSV file successfully!")
 
     # Close the Chrome WebDriver instance
