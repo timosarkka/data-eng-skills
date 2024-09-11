@@ -16,6 +16,9 @@ def create_table(cursor):
             salary_lower DECIMAL(10, 2),           
             salary_avg DECIMAL(10, 2),
             salary_upper DECIMAL(10, 2),
+            hourly_rate_lower DECIMAL(10, 2),
+            hourly_rate_avg DECIMAL(10, 2),
+            hourly_rate_upper DECIMAL(10, 2),
             job_type VARCHAR(255),
             req_skill VARCHAR(255)[]
     );""")
@@ -29,14 +32,17 @@ def insert_job_data(cursor, row):
     salary_lower = None if row['Salary_Lower'] == '' else row['Salary_Lower']
     salary_avg = None if row['Salary_Avg'] == '' else row['Salary_Avg']
     salary_upper = None if row['Salary_Upper'] == '' else row['Salary_Upper']
+    hourly_rate_lower = None if row['Hourly_Rate_Lower'] == '' else row['Hourly_Rate_Lower']
+    hourly_rate_avg = None if row['Hourly_Rate_Avg'] == '' else row['Hourly_Rate_Avg']
+    hourly_rate_upper = None if row['Hourly_Rate_Upper'] == '' else row['Hourly_Rate_Upper']
     job_type = 'No info' if row['Job Type'] == 'nan' else row['Job Type']
     
     # Insert the data into the table
     cursor.execute("""
-        INSERT INTO jobs (job_id, title, company, location, salary_lower, salary_avg, salary_upper, job_type, req_skill)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO jobs (job_id, title, company, location, salary_lower, salary_avg, salary_upper, hourly_rate_lower, hourly_rate_avg, hourly_rate_upper, job_type, req_skill)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (job_id) DO NOTHING
-    """, (row['Job ID'], row['Title'], row['Company'], row['Location'], salary_lower, salary_avg, salary_upper, job_type, skills_array))
+    """, (row['Job ID'], row['Title'], row['Company'], row['Location'], salary_lower, salary_avg, salary_upper, hourly_rate_lower, hourly_rate_avg, hourly_rate_upper, job_type, skills_array))
 
 # Clear the processed CSV files so that the staging area stays clean
 def clear_processed_files(csv_folder):
