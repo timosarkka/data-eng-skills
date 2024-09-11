@@ -13,7 +13,7 @@ sort = "date"
 start = 80 # 10 is page 2, 20 is page 3 etc. Omit '&start' altogether if you want to start from the first page!
 
 # Run the scraper
-extract_data(f"https://indeed.com/jobs?q=\"{job_title}\"&l=\"{location}\"&sort={sort}")
+# extract_data(f"https://indeed.com/jobs?q=\"{job_title}\"&l=\"{location}\"&sort={sort}")
 
 # Set the folders for raw and processed data. Don't alter unless necessary.
 raw_data_folder = 'data/raw/'

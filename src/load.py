@@ -29,7 +29,7 @@ def insert_job_data(cursor, row):
     salary_lower = None if row['Salary_Lower'] == '' else row['Salary_Lower']
     salary_avg = None if row['Salary_Avg'] == '' else row['Salary_Avg']
     salary_upper = None if row['Salary_Upper'] == '' else row['Salary_Upper']
-    job_type = None if row['Job Type'] == 'nan' else row['Job Type']
+    job_type = 'No info' if row['Job Type'] == 'nan' else row['Job Type']
     
     # Insert the data into the table
     cursor.execute("""

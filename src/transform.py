@@ -25,6 +25,8 @@ def clean_data(df):
     df['Location'] = df['Location'].str.replace('Hybrid work in', '').str.replace('Remote in', '')
     df['Location'] = df['Location'].str.replace(r'\b\d{5}\b$', '', regex=True).str.strip()
     df['Job Type'] = df['Job Type'].str.replace(r'(?<!\w)-(?!\w)', '', regex=True).str.strip()
+    df['Job Type'] = df['Job Type'].str.split().str[0]
+    df['Job Type'] = df['Job Type'].str.rstrip(',')
     
     df['Salary'] = df['Salary'].str.replace('$', '').str.replace('From', '').str.replace('a year', '').str.replace('an hour', '').str.strip()
     df[['Salary_Lower', 'Salary_Upper']] = df['Salary'].str.split('-', expand=True)
