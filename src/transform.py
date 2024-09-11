@@ -2,6 +2,7 @@
 # E.g. string cleaning, salary parsing, job description mapped against a skills/technologies list
 
 # Import needed libraries
+import numpy as np
 import pandas as pd
 import re
 import os
@@ -23,13 +24,13 @@ def load_raw_data(raw_data_folder):
 def clean_data(df):
     df['Job ID'] = df['Job ID'].str.replace('job_', '')
     df['Location'] = df['Location'].str.replace('Hybrid work in', '').str.replace('Remote in', '')
-    df['Location'] = df['Location'].str.replace(r'\b\d{5}\b$', '', regex=True).str.strip()
-    df['Job Type'] = df['Job Type'].str.replace(r'(?<!\w)-(?!\w)', '', regex=True).str.strip()
-    df['Job Type'] = df['Job Type'].str.split().str[0]
+    df['Location'] = df['Location'].str.replace(r'\b\d{5}\S*', '', regex=True).str.strip() # Remove zip codes from 'Location'
+    df['Location'] = df['Location'].str.replace(r'\([^)]*\)', '', regex=True).str.strip() # Remove trailing words inside parentheses
+    df['Job Type'] = df['Job Type'].str.replace(r'(?<!\w)-(?!\w)', '', regex=True).str.strip() # Remove single dashes when they're not part of a word
+    df['Job Type'] = df['Job Type'].str.split().str[0] # Remove trailing words from 'Job Type' 
     df['Job Type'] = df['Job Type'].str.rstrip(',')
-    
-    df['Salary'] = df['Salary'].str.replace('$', '').str.replace('From', '').str.replace('a year', '').str.replace('an hour', '').str.strip()
-    df[['Salary_Lower', 'Salary_Upper']] = df['Salary'].str.split('-', expand=True)
+    df['Salary'] = df['Salary'].str.replace('$', '').str.replace('From', '').str.replace('a year', '').str.replace('an hour', '').str.strip() # Remove non-numeric strings from Salary
+    df[['Salary_Lower', 'Salary_Upper']] = df['Salary'].str.split('-', expand=True) # Split salary to a range located in two columns
     df['Salary_Lower'] = df['Salary_Lower'].str.rstrip().str.replace(',', '')
     df['Salary_Upper'] = df['Salary_Upper'].str.rstrip().str.replace(',', '')
     
@@ -43,14 +44,26 @@ def clean_data(df):
     df['Job Type'] = df['Job Type'].astype('str')
     df['Full Job Description'] = df['Full Job Description'].astype('str')
     
+    # If salary is lower than 1000, it's most likely an hourly rate. Split these to their own columns.
+    salary_cond_low = df['Salary_Lower'] < 1000
+    salary_cond_upp = df['Salary_Upper'] < 1000
+    df.loc[salary_cond_low, 'Hourly_Rate_Lower'] = df.loc[salary_cond_low, 'Salary_Lower']
+    df.loc[salary_cond_upp, 'Hourly_Rate_Upper'] = df.loc[salary_cond_low, 'Salary_Upper']
+    df.loc[salary_cond_low, 'Salary_Lower'] = np.nan
+    df.loc[salary_cond_upp, 'Salary_Upper'] = np.nan
+
+    # Cast hourly rate columns to numeric
+    df['Hourly_Rate_Lower'] = pd.to_numeric(df['Hourly_Rate_Lower'], errors='coerce')
+    df['Hourly_Rate_Upper'] = pd.to_numeric(df['Hourly_Rate_Upper'], errors='coerce')
     return df
 
 # Transform the data
 # Calculate average salary, extract key skills and technologies from the job description
 def process_data(df):
     df['Salary_Avg'] = df[['Salary_Upper', 'Salary_Lower']].mean(axis=1, skipna=True)
+    df['Hourly_Rate_Avg'] = df[['Hourly_Rate_Lower', 'Hourly_Rate_Upper']].mean(axis=1, skipna=True)
     df['Req_Skills'] = df['Full Job Description'].apply(lambda desc: extract_skills(desc, data_engineering_skills))
-    return df[['Job ID', 'Title', 'Company', 'Location', 'Salary_Lower', 'Salary_Avg', 'Salary_Upper', 'Job Type', 'Req_Skills']]
+    return df[['Job ID', 'Title', 'Company', 'Location', 'Salary_Lower', 'Salary_Avg', 'Salary_Upper', 'Hourly_Rate_Lower', 'Hourly_Rate_Avg', 'Hourly_Rate_Upper', 'Job Type', 'Req_Skills']]
 
 # Function to extract key skills and technologies from the job description
 def extract_skills(description, skills_dict):
