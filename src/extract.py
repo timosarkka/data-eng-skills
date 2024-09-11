@@ -1,6 +1,5 @@
-# This script is used to scrape job listings from indeed.com for the role of a Data Engineer based in the United States
-# Job title, company name, location, salary, job type and the full job description are extracted
-# This raw data will then be further transformed in de_processor.py
+# Extract.py is used to scrape job listings from a given website
+# This raw data will then be further transformed in transform.py
 
 '''
 Setting up libraries and Chrome driver options
@@ -24,21 +23,18 @@ options.add_argument("--disable-gpu")
 options.add_argument("--disable-extensions")
 options.add_argument("--headless")
 
-
-
-
-
 '''
-Functionality to get the job listings data
+Functionality to extract the job listings data
 '''
 
 # Function to extract the wanted job listing data and write it to a pandas dataframe
 def get_job_data(job_listing, url):
 
-    # Initialize driver again to establish a new fresh connection for each run
+    # Iimportant! Initialize driver again to establish a new fresh connection for each listing
+    # Without initializing, the run will fail after 2-3 listings
     driver = webdriver.Chrome(options=options)
 
-    # Extract job_id and job title
+    # Extract job_id and job title. These will always be present
     job_id = job_listing.find("a")["id"]
     title = job_listing.find("a").find("span").text.strip()
     
@@ -54,6 +50,7 @@ def get_job_data(job_listing, url):
         location = None
 
     # Simulate clicking on the job to reveal additional details, like salary, job type, full job description
+    # Switch to the new tab
     job_link = job_listing.find('a')['href']
     job_url = f"https://indeed.com{job_link}"
     driver.execute_script("window.open('{}')".format(job_url))
@@ -66,7 +63,6 @@ def get_job_data(job_listing, url):
     job_details_soup = BeautifulSoup(driver.page_source, "html.parser")
 
     # Extract salary, job type, full job description from job details page
-
     try:
         salary = job_details_soup.find('span', class_="css-19j1a75 eu4oa1w0").text.strip()
     except AttributeError:
@@ -102,7 +98,7 @@ def get_job_data(job_listing, url):
             sleep(5)  # Allow time for the page to load
     except Exception as e:
         print(f"Error switching windows: {e}")
-        # Reinitialize the driver and load the main page
+        # In case of error, reinitialize the driver and load the main page
         driver.quit()
         driver = webdriver.Chrome(options=options)
         driver.get(url)
@@ -120,12 +116,12 @@ def get_job_data(job_listing, url):
 Main program that runs the scraper
 '''
 
-def main():
+def extract_data(input_url):
     # Initialize a Chrome webdriver with the specified options
     driver = webdriver.Chrome(options=options)
 
     # Define the URL to scrape and open URL in Chrome WebDriver instance
-    url = "https://indeed.com/jobs?q=\"Data Engineer\"&l=\"United States\"&sort=date&start=70"
+    url = input_url
     driver.get(url)
 
     # Add sleep for 5s to allow the page to load
@@ -134,23 +130,23 @@ def main():
     # Get the main page source and parse it with BeautifulSoup
     soup = BeautifulSoup(driver.page_source, "html.parser") 
 
-    # Define the soup from the job listings and initialize an empty list to store job data
+    # Find all job listings, i.e. divs with 'job_seen_beacon' -class
     job_listings = soup.find_all('div', class_='job_seen_beacon')
     job_data_list = []
 
-    # Loop over the job listings on the main page
+    # Loop over the job listings
     for index, job_listing in enumerate(job_listings):
         data = get_job_data(job_listing, url)
         job_data_list.append(data)
         print(f"Successfully extracted data for job listing {index + 1}")
-        # Add a longer delay every 5 listings
+        # Add a longer sleep every 5 listings
         if (index + 1) % 5 == 0:
             sleep(random.uniform(5, 10))
 
     # Convert list of records into a pandas dataframe
     df = pd.DataFrame(job_data_list, columns=['Job ID', 'Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
 
-    # Export the dataframe to a CSV file
+    # Export the dataframe to a CSV file with a timestamp
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f'data/raw/data_eng_info_raw_{current_time}.csv'
     df.to_csv(filename, sep=';', index=False)
@@ -158,7 +154,3 @@ def main():
 
     # Close the Chrome WebDriver instance
     driver.quit()
-
-# Execute the main function
-if __name__ == "__main__":
-    main()
