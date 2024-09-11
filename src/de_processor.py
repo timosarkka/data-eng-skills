@@ -2,18 +2,27 @@
 # It is used to clean and transform the data and prepare it for further analysis
 # E.g. string cleaning, salary parsing, job description is mapped against a skills/technologies list and new columns are created to list them
 
-
-
 # Import needed libraries and setup some pandas options
 import pandas as pd
 import re
+import os
+from datetime import datetime
 from data_eng_skills import data_engineering_skills
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-# Import the raw data
-df = pd.read_csv('data/raw/data_eng_info_raw.csv', sep=";", header=0)
+# Import all raw data files from the data/raw folder
+raw_data_folder = 'data/raw/'
+all_df = []
 
+for filename in os.listdir(raw_data_folder):
+    if filename.endswith('.csv'):
+        file_path = os.path.join(raw_data_folder, filename)
+        df = pd.read_csv(file_path, sep=";", header=0)
+        all_df.append(df)
+
+# Concatenate all dataframes
+df = pd.concat(all_df, ignore_index=True)
 
 '''
 Cleaning the data
@@ -49,8 +58,6 @@ df['Salary_Upper'] = pd.to_numeric(df['Salary_Upper'], errors='coerce')
 df['Job Type'] = df['Job Type'].astype('str')
 df['Full Job Description'] = df['Full Job Description'].astype('str')
 
-
-
 '''
 Transforming the data
 '''
@@ -64,6 +71,12 @@ def extract_skills(description, skills_dict):
     found_skills = []
     description_lower = description.lower()
 
+    # Special case for R: check for word boundaries and 'R,' cases
+    r_pattern = r'\b(R\b|R,|R programming|R language|R studio)\b'
+    if re.search(r_pattern, description, re.IGNORECASE):
+        found_skills.append('R')
+
+    # Search for the rest of skills and tech
     for skill, variations in skills_dict.items():
         if any(variation.lower() in description_lower for variation in variations):
             found_skills.append(skill)
@@ -73,12 +86,16 @@ def extract_skills(description, skills_dict):
 # Apply the function extract_skills to job descriptions
 df['Req_Skills'] = df['Full Job Description'].apply(lambda desc: extract_skills(desc, data_engineering_skills))
 
-
 # Filter out columns that are not needed
 df = df[['Job ID', 'Title', 'Company', 'Location', 'Salary_Lower', 'Salary_Avg', 'Salary_Upper', 'Job Type', 'Req_Skills']]
 
+'''
+Write the data to a csv
+'''
 
+# Generate filename with current date and time
+current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+output_filename = f'data/processed/data_eng_info_processed_{current_time}.csv'
 
-'Write the data to a csv'
-
-df.to_csv('data/processed/data_eng_info_processed.csv', sep=';', index=False)
+df.to_csv(output_filename, sep=';', index=False)
+print(f"Processed data saved to {output_filename}")
