@@ -10,10 +10,10 @@ from load import load_data
 job_title = "Data Engineer"
 location = "United States"
 sort = "date"
-start = 10 # 10 is page 2, 20 is page 3 etc. Omit '&start' altogether if you want to start from the first page!
+start = 160 # 10 is page 2, 20 is page 3 etc. Omit '&start' altogether if you want to start from the first page!
 
 # Run the scraper
-extract_data(f"https://indeed.com/jobs?q=\"{job_title}\"&l=\"{location}\"&sort={sort}")
+extract_data(f"https://indeed.com/jobs?q=\"{job_title}\"&l=\"{location}\"&sort={sort}&start={start}")
 
 # Set the folders for raw and processed data. Don't alter unless necessary.
 raw_data_folder = 'data/raw/'

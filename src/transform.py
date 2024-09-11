@@ -29,6 +29,7 @@ def clean_data(df):
     df['Job Type'] = df['Job Type'].str.replace(r'(?<!\w)-(?!\w)', '', regex=True).str.strip() # Remove single dashes when they're not part of a word
     df['Job Type'] = df['Job Type'].str.split().str[0] # Remove trailing words from 'Job Type' 
     df['Job Type'] = df['Job Type'].str.rstrip(',')
+    df['Job Type'] = df['Job Type'].str.replace('Temporary', 'Part-time').str.replace('Permanent', 'Full-time').str.replace('Temp-to-hire', 'Part-time')
     df['Salary'] = df['Salary'].str.replace('$', '').str.replace('From', '').str.replace('a year', '').str.replace('an hour', '').str.strip() # Remove non-numeric strings from Salary
     df[['Salary_Lower', 'Salary_Upper']] = df['Salary'].str.split('-', expand=True) # Split salary to a range located in two columns
     df['Salary_Lower'] = df['Salary_Lower'].str.rstrip().str.replace(',', '')
