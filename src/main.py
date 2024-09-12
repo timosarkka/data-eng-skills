@@ -10,20 +10,16 @@ from load import load_data
 job_title = "Data Engineer"
 location = "United States"
 sort = "date"
-start = 160 # 10 is page 2, 20 is page 3 etc. Omit '&start' altogether if you want to start from the first page!
+start = 190 # 10 is page 2, 20 is page 3 etc. Omit '&start' altogether if you want to start from the first page!
 
 # Run the scraper
 extract_data(f"https://indeed.com/jobs?q=\"{job_title}\"&l=\"{location}\"&sort={sort}&start={start}")
 
-# Set the folders for raw and processed data. Don't alter unless necessary.
-raw_data_folder = 'data/raw/'
-processed_data_folder = 'data/processed/'
-
 # Transform the raw data
-transform_data(raw_data_folder, processed_data_folder)
+transform_data()
 
 # Load the transformed data into the database
-load_data(processed_data_folder)
+load_data()
 
 # Print out a message to confirm that the process is complete
 print("Data pipeline has been executed successfully!")

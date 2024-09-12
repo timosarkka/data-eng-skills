@@ -9,10 +9,13 @@ Setting up libraries and Chrome driver options
 import pandas as pd
 import random
 import re
+from azure.storage.blob import BlobServiceClient
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 from bs4 import BeautifulSoup
+from datetime import datetime
 from selenium import webdriver
 from time import sleep
-from datetime import datetime
 
 # Set up Chrome options to mimic browser behavior
 options = webdriver.ChromeOptions()
@@ -146,11 +149,30 @@ def extract_data(input_url):
     # Convert list of records into a pandas dataframe
     df = pd.DataFrame(job_data_list, columns=['Job ID', 'Title', 'Company', 'Location', 'Salary', 'Job Type', 'Full Job Description'])
 
-    # Export the dataframe to a CSV file with a timestamp
+    # Define the container and file name
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f'data/raw/data_eng_info_raw_{current_time}.csv'
-    df.to_csv(filename, sep=';', index=False)
-    print("Raw data saved to CSV file successfully!")
+    CONTAINER_NAME = "dataraw"
+    BLOB_NAME = f'data_eng_info_raw_{current_time}.csv'
+
+    # Set up Azure Key Vault client
+    key_vault_url = "https://timokeyvault.vault.azure.net/"
+    credential = DefaultAzureCredential()
+    secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
+
+    # Retrieve the connection string from Azure Key Vault
+    secret_name = "azure-storage-blob-connection-string"
+    PASS_TOKEN = secret_client.get_secret(secret_name).value
+
+    # Create the BlobServiceClient using the retrieved connection string
+    BLOB_SERVICE_CLIENT = BlobServiceClient.from_connection_string(PASS_TOKEN)
+
+    # Create a blob client
+    blob_client = BLOB_SERVICE_CLIENT.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
+
+    # Upload the DataFrame directly to Azure Blob Storage
+    csv_data = df.to_csv(sep=";", index=False).encode('utf-8')
+    blob_client.upload_blob(csv_data, overwrite=True)
+    print(f"Data uploaded to blob {BLOB_NAME} in container {CONTAINER_NAME}.")
 
     # Close the Chrome WebDriver instance
     driver.quit()
