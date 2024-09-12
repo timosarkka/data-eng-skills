@@ -3,20 +3,48 @@
 
 # Import needed libraries
 import numpy as np
+import os
 import pandas as pd
 import re
-import os
+from azure.storage.blob import BlobServiceClient
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 from datetime import datetime
 from data_eng_skills import data_engineering_skills
+from io import StringIO
 
 # Load all .csv-files from the raw data folder to one dataframe
-def load_raw_data(raw_data_folder):
+def load_raw_data():
+    # Set up Azure Key Vault client
+    key_vault_url = "https://timokeyvault.vault.azure.net/"
+    credential = DefaultAzureCredential()
+    secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
+
+    # Retrieve the connection string from Azure Key Vault
+    secret_name = "azure-storage-blob-connection-string"
+    connection_string = secret_client.get_secret(secret_name).value
+
+    # Create the BlobServiceClient
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
+    # Get a reference to the container
+    container_name = "dataraw"
+    container_client = blob_service_client.get_container_client(container_name)
+
+    # List all blobs in the container
+    blob_list = container_client.list_blobs()
+
     all_df = []
-    for filename in os.listdir(raw_data_folder):
-        if filename.endswith('.csv'):
-            file_path = os.path.join(raw_data_folder, filename)
-            df = pd.read_csv(file_path, sep=";", header=0)
+    for blob in blob_list:
+        if blob.name.endswith('.csv'):
+            # Download the blob content
+            blob_client = container_client.get_blob_client(blob.name)
+            blob_data = blob_client.download_blob().readall().decode('utf-8')
+            
+            # Create a DataFrame from the blob data
+            df = pd.read_csv(StringIO(blob_data), sep=";", header=0)
             all_df.append(df)
+
     return pd.concat(all_df, ignore_index=True)
 
 # Clean the data
@@ -83,16 +111,36 @@ def extract_skills(description, skills_dict):
 
     return found_skills
 
-# Save the processed data to a .csv-file
-def save_processed_data(df, output_folder):
+# Save the processed data to a .csv-file on Azure Blob Storage
+def save_processed_data(df):
+    # Define the container and file name
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    output_filename = f'{output_folder}/data_eng_info_processed_{current_time}.csv'
-    df.to_csv(output_filename, sep=';', index=False)
-    print(f"Processed data saved to {output_filename}")
+    CONTAINER_NAME = "dataprocessed"
+    BLOB_NAME = f'data_eng_info_processed_{current_time}.csv'
+
+    # Set up Azure Key Vault client
+    key_vault_url = "https://timokeyvault.vault.azure.net/"
+    credential = DefaultAzureCredential()
+    secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
+
+    # Retrieve the connection string from Azure Key Vault
+    secret_name = "azure-storage-blob-connection-string"
+    PASS_TOKEN = secret_client.get_secret(secret_name).value
+
+    # Create the BlobServiceClient using the retrieved connection string
+    BLOB_SERVICE_CLIENT = BlobServiceClient.from_connection_string(PASS_TOKEN)
+
+    # Create a blob client
+    blob_client = BLOB_SERVICE_CLIENT.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
+
+    # Upload the DataFrame directly to Azure Blob Storage
+    csv_data = df.to_csv(sep=';', index=False).encode('utf-8')
+    blob_client.upload_blob(csv_data, overwrite=True)
+    print(f"Processed data uploaded to blob {BLOB_NAME} in container {CONTAINER_NAME}.")
 
 # Main function to transform the data
-def transform_data(raw_data_folder, output_folder):
-    df = load_raw_data(raw_data_folder)
+def transform_data():
+    df = load_raw_data()
     df = clean_data(df)
     df = process_data(df)
-    save_processed_data(df, output_folder)
+    save_processed_data(df)

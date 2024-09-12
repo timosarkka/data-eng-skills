@@ -3,7 +3,9 @@
 import csv
 import os
 import psycopg2
-from psycopg2 import sql
+from azure.storage.blob import BlobServiceClient
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 from config import config
 
 # Create the table and columns if it doesn't exist
@@ -45,36 +47,64 @@ def insert_job_data(cursor, row):
     """, (row['Job ID'], row['Title'], row['Company'], row['Location'], salary_lower, salary_avg, salary_upper, hourly_rate_lower, hourly_rate_avg, hourly_rate_upper, job_type, skills_array))
 
 # Clear the processed CSV files so that the staging area stays clean
-def clear_processed_files(csv_folder):
-    print("Clearing processed CSV files...")
-    for filename in os.listdir(csv_folder):
-        if filename.endswith('.csv'):
-            file_path = os.path.join(csv_folder, filename)
+def clear_processed_files(blob_service_client, container_name):
+    print("Clearing processed CSV files from Azure Blob Storage...")
+    container_client = blob_service_client.get_container_client(container_name)
+    blobs_list = container_client.list_blobs()
+    
+    for blob in blobs_list:
+        if blob.name.endswith('.csv'):
             try:
-                os.remove(file_path)
-                print(f"Deleted: {filename}")
+                blob_client = container_client.get_blob_client(blob.name)
+                blob_client.delete_blob()
+                print(f"Deleted: {blob.name}")
             except Exception as e:
-                print(f"Error deleting {filename}: {e}")
-    print("Processed-folder cleared.")
+                print(f"Error deleting {blob.name}: {e}")
+    
+    print("Processed container cleared.")
 
 # The main function that loads the data into the database
-def load_data(csv_folder):
+def load_data():
     conn = psycopg2.connect(**config())
     cursor = conn.cursor()
 
     create_table(cursor)
     conn.commit()
 
-    for filename in os.listdir(csv_folder):
-        if filename.endswith('.csv'):
-            with open(os.path.join(csv_folder, filename), 'r') as f:
-                reader = csv.DictReader(f, delimiter=";")
-                for row in reader:
-                    insert_job_data(cursor, row)
+    # Set up Azure Key Vault client
+    key_vault_url = "https://timokeyvault.vault.azure.net/"
+    credential = DefaultAzureCredential()
+    secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
+
+    # Retrieve the connection string from Azure Key Vault
+    secret_name = "azure-storage-blob-connection-string"
+    connection_string = secret_client.get_secret(secret_name).value
+
+    # Create the BlobServiceClient
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
+    # Get a reference to the container
+    container_name = "dataprocessed"
+    container_client = blob_service_client.get_container_client(container_name)
+
+    # List all blobs in the container
+    blob_list = container_client.list_blobs()
+
+    for blob in blob_list:
+        if blob.name.endswith('.csv'):
+            # Download the blob content
+            blob_client = container_client.get_blob_client(blob.name)
+            blob_data = blob_client.download_blob().readall().decode('utf-8')
+            
+            # Create a CSV reader from the blob data
+            reader = csv.DictReader(blob_data.splitlines(), delimiter=";")
+            
+            for row in reader:
+                insert_job_data(cursor, row)
 
     conn.commit()
     conn.close()
 
     print("Wrote data to SQL table successfully!")
     
-    clear_processed_files(csv_folder)
+    clear_processed_files(blob_service_client, container_name)
