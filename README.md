@@ -1,4 +1,4 @@
-# Data Engineering Top Skills and Job Market Analysis
+# Data Engineering in 2024: Which Skills Will Land You the Job?
 
 ![image](https://github.com/user-attachments/assets/e964a34c-4a14-4b00-ab37-226280660772)
 
