@@ -16,19 +16,18 @@ from io import StringIO
 # Load all .csv-files from the raw data folder to one dataframe
 def load_raw_data():
     # Set up Azure Key Vault client
-    key_vault_url = "https://timokeyvault.vault.azure.net/"
+    key_vault_url = os.environ.get('AZURE_KEY_VAULT_URL')
     credential = DefaultAzureCredential()
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
     # Retrieve the connection string from Azure Key Vault
-    secret_name = "azure-storage-blob-connection-string"
-    connection_string = secret_client.get_secret(secret_name).value
+    connection_string = secret_client.get_secret(os.environ.get('AZURE_STORAGE_CONNECTION_STRING_SECRET_NAME')).value
 
     # Create the BlobServiceClient
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
     # Get a reference to the container
-    container_name = "dataraw"
+    container_name = os.environ.get('AZURE_RAW_STORAGE_CONTAINER_NAME')
     container_client = blob_service_client.get_container_client(container_name)
 
     # List all blobs in the container
@@ -77,7 +76,7 @@ def clean_data(df):
     salary_cond_low = df['Salary_Lower'] < 1000
     salary_cond_upp = df['Salary_Upper'] < 1000
     df.loc[salary_cond_low, 'Hourly_Rate_Lower'] = df.loc[salary_cond_low, 'Salary_Lower']
-    df.loc[salary_cond_upp, 'Hourly_Rate_Upper'] = df.loc[salary_cond_low, 'Salary_Upper']
+    df.loc[salary_cond_upp, 'Hourly_Rate_Upper'] = df.loc[salary_cond_upp, 'Salary_Upper']
     df.loc[salary_cond_low, 'Salary_Lower'] = np.nan
     df.loc[salary_cond_upp, 'Salary_Upper'] = np.nan
 
@@ -115,17 +114,16 @@ def extract_skills(description, skills_dict):
 def save_processed_data(df):
     # Define the container and file name
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    CONTAINER_NAME = "dataprocessed"
+    CONTAINER_NAME = os.environ.get('AZURE_PROCESSED_STORAGE_CONTAINER_NAME')
     BLOB_NAME = f'data_eng_info_processed_{current_time}.csv'
 
     # Set up Azure Key Vault client
-    key_vault_url = "https://timokeyvault.vault.azure.net/"
+    key_vault_url = os.environ.get('AZURE_KEY_VAULT_URL')
     credential = DefaultAzureCredential()
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
     # Retrieve the connection string from Azure Key Vault
-    secret_name = "azure-storage-blob-connection-string"
-    PASS_TOKEN = secret_client.get_secret(secret_name).value
+    PASS_TOKEN = secret_client.get_secret(os.environ.get('AZURE_STORAGE_CONNECTION_STRING_SECRET_NAME')).value
 
     # Create the BlobServiceClient using the retrieved connection string
     BLOB_SERVICE_CLIENT = BlobServiceClient.from_connection_string(PASS_TOKEN)

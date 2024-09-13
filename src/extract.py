@@ -9,6 +9,7 @@ Setting up libraries and Chrome driver options
 import pandas as pd
 import random
 import re
+import os
 from azure.storage.blob import BlobServiceClient
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
@@ -33,8 +34,7 @@ Functionality to extract the job listings data
 # Function to extract the wanted job listing data and write it to a pandas dataframe
 def get_job_data(job_listing, url):
 
-    # Iimportant! Initialize driver again to establish a new fresh connection for each listing
-    # Without initializing, the run will fail after 2-3 listings
+    # Iimportant! Initialize driver again to establish a new fresh connection for each listing --> otherwise, the run will fail after 2-3 listings
     driver = webdriver.Chrome(options=options)
 
     # Extract job_id and job title. These will always be present
@@ -53,10 +53,12 @@ def get_job_data(job_listing, url):
         location = None
 
     # Simulate clicking on the job to reveal additional details, like salary, job type, full job description
-    # Switch to the new tab
+    from config import get_base_url
+
     job_link = job_listing.find('a')['href']
-    job_url = f"https://indeed.com{job_link}"
+    job_url = f"{get_base_url()}{job_link}"
     driver.execute_script("window.open('{}')".format(job_url))
+    # Switch to the new tab (last handle)
     driver.switch_to.window(driver.window_handles[-1])
 
     # Wait for job details to load
@@ -91,7 +93,7 @@ def get_job_data(job_listing, url):
         
         # Check if there are any remaining window handles
         if driver.window_handles:
-            # Switch back to the main page (now the first handle)
+            # Switch back to the main page (first handle)
             driver.switch_to.window(driver.window_handles[0])
         else:
             # If no handles left, reinitialize the driver and load the main page
@@ -151,16 +153,16 @@ def extract_data(input_url):
 
     # Define the container and file name
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    CONTAINER_NAME = "dataraw"
+    CONTAINER_NAME = os.environ.get('AZURE_RAW_STORAGE_CONTAINER_NAME')
     BLOB_NAME = f'data_eng_info_raw_{current_time}.csv'
 
     # Set up Azure Key Vault client
-    key_vault_url = "https://timokeyvault.vault.azure.net/"
+    key_vault_url = os.environ.get('AZURE_KEY_VAULT_URL')
     credential = DefaultAzureCredential()
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
     # Retrieve the connection string from Azure Key Vault
-    secret_name = "azure-storage-blob-connection-string"
+    secret_name = os.environ.get('AZURE_STORAGE_CONNECTION_STRING_SECRET_NAME')
     PASS_TOKEN = secret_client.get_secret(secret_name).value
 
     # Create the BlobServiceClient using the retrieved connection string

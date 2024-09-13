@@ -72,19 +72,19 @@ def load_data():
     conn.commit()
 
     # Set up Azure Key Vault client
-    key_vault_url = "https://timokeyvault.vault.azure.net/"
+    key_vault_url = os.getenv('AZURE_KEY_VAULT_URL')
     credential = DefaultAzureCredential()
     secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
     # Retrieve the connection string from Azure Key Vault
-    secret_name = "azure-storage-blob-connection-string"
+    secret_name = os.getenv('AZURE_STORAGE_CONNECTION_STRING_SECRET_NAME')
     connection_string = secret_client.get_secret(secret_name).value
 
     # Create the BlobServiceClient
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
     # Get a reference to the container
-    container_name = "dataprocessed"
+    container_name = os.getenv('AZURE_PROCESSED_STORAGE_CONTAINER_NAME')
     container_client = blob_service_client.get_container_client(container_name)
 
     # List all blobs in the container
