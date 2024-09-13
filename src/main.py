@@ -18,7 +18,7 @@ def main():
     base_url = get_base_url()
 
     # Run the scraper
-    extract_data(f"{base_url}/jobs?q=\"{job_title}\"&l=\"{location}\"&sort={sort}")
+    extract_data(f"{base_url}/jobs?q=\"{job_title}\"&l=\"{location}\"&sort={sort}&start={start}")
 
     # Transform the raw data
     transform_data()
