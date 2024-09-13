@@ -101,7 +101,15 @@ And that's it! We have nice and clean data ready in our Azure PostgreSQL flexibl
 
 See load.py for more details.
 
-## 8. Results and Analysis
+## 8. Automation
+
+After first running the pipeline manually to extract the base data for my SQL table and analysis, I scheduled the full pipeline to run twice per day fully automatically (once at 8 AM and once at 4 PM).
+
+This was simply done by setting up a cron job on the Linux VM and giving it the proper rights to execute the scripts.
+
+As a result, my SQL database and the connected Power BI dashboard keeps updating automatically every day with fresh Data Engineer job listings data! 
+
+## 9. Results and Analysis
 
 All in all, I extracted about ~300 Data Engineer job listings where location was defined as the United States. I sorted the results by date before extracting, that way I'd always get only fresh data.
 
@@ -126,14 +134,6 @@ What's also interesting are some skills that are maybe less frequently mentioned
 I also did a quick location-dependent average salary analysis. As expected, the highest average salaries can be found from big tech hubs and on the coasts (SF, NY, TX). But plenty of jobs with mid-ranged salaries also elsewhere across the US. In fact, most jobs come with a salary well above > $100K per year, and not so many that are below this threshold.
 
 ![image](https://github.com/user-attachments/assets/055ef808-a793-4c72-8a37-72fab56d8d53)
-
-## 9. Scheduling Cron Jobs
-
-After first running the pipeline manually to extract the base data for my SQL table and analysis, I scheduled the full pipeline to run twice per day fully automatically (once at 8 AM and once at 4 PM).
-
-This was simply done by setting up a cron job on the Linux VM and giving it the proper rights to execute the scripts.
-
-As a result, my SQL database and the connected Power BI dashboard keeps updating automatically every day with fresh Data Engineer job listings data! 
 
 ## 10. Future Work
 
