@@ -31,7 +31,7 @@ The project folders are structured as shown below. **Note that I have not provid
 
 My tech stack for this project:
 
-Languages and libraries:
+Languages and libraries
 * Python, numpy, pandas 
 * Selenium
 * BeautifulSoup 
@@ -39,7 +39,7 @@ Languages and libraries:
 * Psycopg2
 * Misc. smaller python libraries
 
-Cloud infrastructure:
+Cloud infrastructure
 * Azure VM for hosting the scripts and triggers (cron jobs)
 * Azure Blog Storage for hosting the raw and staging data
 * Azure Database for PostgreSQL flexible server for hosting the cleansed and processed data
