@@ -47,7 +47,7 @@ Cloud infrastructure
 
 ## 4. Data Pipeline Architecture
 
-Here's the basic architecture of the pipeline. Cron job triggers main.py. Main.py runs the other scripts. Azure Blob Storage acts as the object storage. Finally, a PostgreSQL is used to store the final cleaned data for analysis.
+Here's the basic architecture of the pipeline. Cron job triggers main.py. Main.py runs the other scripts. Azure Blob Storage acts as the intermediate object storage. PostgreSQL is used to store the final cleaned data for analysis. And finally, Power BI is connected to PostgreSQL to read and visualize the data.
 
 ![image](https://github.com/user-attachments/assets/68cca6d5-a08e-4dfd-9042-3c0359760fcf)
 
