@@ -120,8 +120,8 @@ The results were pretty interesting. Some key findings:
 * Only 24 out of 304 jobs were posted as **fully remote**.
 * An overwhelming majority, 216 jobs, were posted as **full-time**.
 * Yearly salaries ranged all the way from around **$52K** to as high as **$720K**!
-* Median salary was **$140K**, whereas average salary was a bit higher, **$144K**
-* For jobs where hourly rates were mentioned, low end was about **32 $/h**, average **58 $/h** and max hour rate **108 $/h**
+* Median salary was **$140K**, whereas average salary was a bit higher, **$144K**.
+* For jobs where hourly rates were mentioned, low end was about **32 $/h**, average **58 $/h** and max hour rate **108 $/h**.
 
 Maybe even more interesting were the top 10 skills that were mentioned across most job ads (see image above).
 
