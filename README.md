@@ -22,7 +22,7 @@ The project folders are structured as shown below. **Note that I have not provid
 |   ├── load.py                      # Loading data to PostgreSQL
 │   ├── main.py                      # Executes the main program
 │   └── config.py                    # Configuration and secrets management (NOT on GitHub!)
-├── results/
+├── visualization/
 │   └── dataeng_jobs_dashboard.pbix  # Power BI visualization dashboard for analysis
 └── README.md                        # Project documentation
 ```
