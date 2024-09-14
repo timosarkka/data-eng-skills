@@ -111,7 +111,7 @@ As a result, my SQL database and the connected Power BI dashboard keeps updating
 
 ## 9. Results and Analysis
 
-All in all, I extracted about ~300 Data Engineer job listings where location was defined as the United States. I sorted the results by date before extracting, that way I'd always get only fresh data.
+All in all, I extracted about ~300 Data Engineer job listings where location was defined as the United States. I sorted the results by date before extracting, that way I'd always get only new data.
 
 ![image](https://github.com/user-attachments/assets/1db0a74e-88e1-419a-a8aa-35ea2a42abf7)
 
