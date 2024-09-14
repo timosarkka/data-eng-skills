@@ -42,7 +42,7 @@ Languages and libraries
 Cloud infrastructure
 * Azure VM for hosting the scripts and triggers (cron jobs)
 * Azure Blog Storage for hosting the raw and staging data
-* Azure Database for PostgreSQL flexible server for hosting the cleansed and processed data
+* Azure Database for PostgreSQL flexible server for hosting the cleaned and processed data
 * Power BI for final data modeling and visualizations
 
 ## 4. Data Pipeline Architecture
