@@ -56,7 +56,7 @@ Here's the basic architecture of the pipeline. Cron job triggers main.py. Main.p
 
 In a nutshell, here's how extract.py extracts the data:
 
-1. Set up libraries and Chrome webdriver with options.
+1. Set up Chrome webdriver with options.
 2. Open browser and url.
 3. Parse the job listings into a soup object (15 per page).
 4. Get basic job data first (job id, title, company, location).
