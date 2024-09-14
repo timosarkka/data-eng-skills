@@ -127,7 +127,7 @@ Maybe even more interesting were the top 10 skills that were mentioned across mo
 
 More than **80% of jobs mentioned SQL** as a key skill, **73% mentioned Python** and **57% mentioned AWS**.
 
-Other tech skills that fit into the top 10 were Scala, Azure, Spark, Git, ORC, Java and GCP. I think it's fair to say that these are probably the foundational skills every data engineer needs to know at some level to be hireable. So it could be a good idea to master these first!
+Other tech skills that fit into the top 10 were Scala, Azure, Spark, Git, ORC, Java and GCP. I think it's fair to say that these are probably the foundational tech skills every data engineer needs to know at some level to be hireable. So it could be a good idea to master these first!
 
 What's also interesting are some skills that are maybe less frequently mentioned than I would've expected. For example, only **19% mentioned Power BI** and **15% mentioned R** as a wanted skill. Some (up-and-coming?) Microsoft technologies that I've been studying myself are **Azure Synapse Analytics** and **Fabric**. These were only mentioned in **~4%** and **~8%** of job ads, respectively.
 
