@@ -32,7 +32,8 @@ The project folders are structured as shown below. **Note that I have not provid
 My tech stack for this project:
 
 Languages and libraries
-* Python, numpy, pandas 
+* Python, numpy, pandas
+* SQL
 * Selenium
 * BeautifulSoup 
 * Azure SDK
